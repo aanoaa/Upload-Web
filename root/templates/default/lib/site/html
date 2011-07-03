@@ -1,0 +1,35 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko">
+ <head>
+  <title>[% site.title or c.config.name FILTER upper %]</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" href="[% c.uri_for('/static/css/style.css') %]" type="text/css" />
+  [% FOREACH css IN csses -%]
+  <link rel="stylesheet" href="[% c.uri_for('/static/css/' _ css) %]" type="text/css" />
+  [% END -%]
+  <script type="text/javascript" src="[% c.uri_for('/static/js/lib/jquery.js') %]"></script>
+  [% FOREACH lib IN jslib -%]
+  <script type="text/javascript" src="[% c.uri_for('/static/js/lib/' _ lib) %]"></script>
+  [% END -%]
+  [% IF jssrc.defined -%]
+    [% FOREACH src IN jssrc -%]
+    <script type="text/javascript" src="[% c.uri_for('/static/js/src/' _ src) %]"></script>
+    [% END -%]
+  [% ELSE -%]
+    [% TRY -%]
+        [% SET filename = c.action.reverse _ '.js' -%]
+        [% USE file(filename, root = c.config.root _ '/static/js/src') -%]
+      <script type="text/javascript" src="[% c.uri_for('/static/js/src/' _ filename) %]"></script>
+    [% CATCH File -%]
+        [% debug('File error: ' _ error.info) -%]
+    [% END -%]
+  [% END -%]
+  <style type="text/css">
+[% PROCESS ttsite.css %]
+  </style>
+ </head>
+ <body>
+[% content %]
+ </body>
+</html>
