@@ -8,14 +8,22 @@
   [% FOREACH css IN csses -%]
   <link rel="stylesheet" href="[% c.uri_for('/static/css/' _ css) %]" type="text/css" />
   [% END -%]
-  <script type="text/javascript" src="[% c.uri_for('/static/js/lib/jquery.js') %]"></script>
+
+  <link href="[% c.uri_for('/static/css/default.css') %]" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" src="[% c.uri_for('/static/js/lib/jquery-1.6.min.js') %]"></script>
+  <script type="text/javascript" src="[% c.uri_for('/static/js/lib/swfupload/swfupload.js') %]"></script>
+  <script type="text/javascript" src="[% c.uri_for('/static/js/lib/swfupload/swfupload.queue.js') %]"></script>
+  <script type="text/javascript" src="[% c.uri_for('/static/js/lib/fileprogress.js') %]"></script>
+  <script type="text/javascript" src="[% c.uri_for('/static/js/lib/handlers.js') %]"></script>
+
+  <script type="text/javascript" src="[% c.uri_for('/static/js/src/default.js') %]"></script>
   [% FOREACH lib IN jslib -%]
   <script type="text/javascript" src="[% c.uri_for('/static/js/lib/' _ lib) %]"></script>
   [% END -%]
   [% IF jssrc.defined -%]
-    [% FOREACH src IN jssrc -%]
-    <script type="text/javascript" src="[% c.uri_for('/static/js/src/' _ src) %]"></script>
-    [% END -%]
+  [% FOREACH src IN jssrc -%]
+  <script type="text/javascript" src="[% c.uri_for('/static/js/src/' _ src) %]"></script>
+  [% END -%]
   [% ELSE -%]
     [% TRY -%]
         [% SET filename = c.action.reverse _ '.js' -%]

@@ -1,6 +1,8 @@
 package Upload::Web::Controller::Root;
 # ABSTRACT: Root Controller for Upload::Web
 use Moose;
+use utf8;
+use Digest::MD5 qw/md5_hex/;
 use namespace::autoclean;
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -29,6 +31,54 @@ The root page (/)
 
 sub index :Path :Args(0) {
     my ( $self, $c ) = @_;
+}
+
+=head2 upload
+
+=cut
+
+sub upload :Local {
+    my ( $self, $c ) = @_;
+    my $upload  = $c->req->upload('Filedata');
+    my $name = $upload->basename;
+    my $digest = md5_hex($name);
+    $upload->copy_to($c->config->{upload_dir} . "/$digest") if $upload;
+
+    $c->model('DB::Upload')->create({
+        md5 => $digest,
+        fname => $name
+    });
+
+    my $uri = $c->uri_for('download', $digest);
+    $c->res->body($uri);
+}
+
+=head2 download
+
+=cut
+
+sub download :Local :Args(1) {
+    my ( $self, $c, $digest ) = @_;
+
+    my $upload = $c->model('DB::Upload')->search({
+        md5 => $digest   
+    })->single;
+
+    my $fname = $upload->fname;
+    my $download = $upload->download;
+    $upload->download($download++);
+    $upload->update;
+
+
+    my $upload_dir = $c->config->{upload_dir};
+    my $output_file = "$upload_dir/$digest";
+    my @st = stat($output_file) or die "No $output_file: $!";
+    $c->res->headers->content_type('application/octet-stream');
+    $c->res->headers->content_length($st[7]);
+    $c->res->headers->header("Content-Disposition" => 'attachment;filename="' . $fname . '";');
+    my $fh = IO::File->new( $output_file, 'r' );
+    $c->res->body($fh);
+    undef $fh;
 }
 
 =head2 default
