@@ -1,4 +1,5 @@
 package Upload::Web::Controller::Root;
+# ABSTRACT: Root Controller for Upload::Web
 use Moose;
 use namespace::autoclean;
 
@@ -28,9 +29,6 @@ The root page (/)
 
 sub index :Path :Args(0) {
     my ( $self, $c ) = @_;
-
-    # Hello World
-    $c->response->body( $c->welcome_message );
 }
 
 =head2 default
@@ -52,17 +50,6 @@ Attempt to render a view, if needed.
 =cut
 
 sub end : ActionClass('RenderView') {}
-
-=head1 AUTHOR
-
-Hyungsuk Hong <aanoaa@gmail.com>
-
-=head1 LICENSE
-
-This library is free software. You can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-=cut
 
 __PACKAGE__->meta->make_immutable;
 
