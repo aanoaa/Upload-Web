@@ -4,10 +4,10 @@ use utf8;
 use Moose;
 use namespace::autoclean;
 
-use Digest::MD5 qw/md5_hex/;
 use File::Spec::Functions;
 use File::stat;
 use URI::Escape;
+use UUID::Tiny;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -46,21 +46,21 @@ sub upload :Local {
 
     my $upload = $c->req->upload('Filedata');
     if ($upload) {
-        my $digest = md5_hex( uri_escape_utf8( $upload->basename ) );
+        my $uuid = create_UUID_as_string;
 
         # save uploaded file
-        $upload->copy_to( catfile( $c->config->{upload_dir}, $digest ) );
+        $upload->copy_to( catfile( $c->config->{upload_dir}, $uuid ) );
 
         # save meta data
         $c->model('DB::Upload')->create(
             {
-                md5   => $digest,
+                md5   => $uuid,
                 fname => $upload->basename,
             }
         );
 
         # generate download url
-        $c->res->body( $c->uri_for('download', $digest) );
+        $c->res->body( $c->uri_for('download', $uuid) );
     }
     else {
         Catalyst::Exception->throw(
@@ -77,11 +77,17 @@ sub upload :Local {
 =cut
 
 sub download :Local :Args(1) {
-    my ( $self, $c, $digest ) = @_;
+    my ( $self, $c, $uuid ) = @_;
+
+    # check download key is valid or not
+    unless ( is_UUID_string($uuid) ) {
+        Catalyst::Exception->throw( message => "uuid is not valid" );
+        $c->detach('default');
+    }
 
     # fetch upload object from db
     my $upload
-        = $c->model('DB::Upload')->search({ md5 => $digest })->single;
+        = $c->model('DB::Upload')->search({ md5 => $uuid })->single;
 
     # increase download counter
     my $download = $upload->download;
@@ -90,7 +96,7 @@ sub download :Local :Args(1) {
 
     my $full_path  = catfile(
         $c->config->{upload_dir},
-        $digest,
+        $uuid,
     );
     if (-f $full_path) {
         #
