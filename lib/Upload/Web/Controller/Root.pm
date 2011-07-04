@@ -1,9 +1,13 @@
 package Upload::Web::Controller::Root;
 # ABSTRACT: Root Controller for Upload::Web
-use Moose;
 use utf8;
-use Digest::MD5 qw/md5_hex/;
+use Moose;
 use namespace::autoclean;
+
+use Digest::MD5 qw/md5_hex/;
+use File::Spec::Functions;
+use File::stat;
+use URI::Escape;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -39,18 +43,33 @@ sub index :Path :Args(0) {
 
 sub upload :Local {
     my ( $self, $c ) = @_;
-    my $upload  = $c->req->upload('Filedata');
-    my $name = $upload->basename;
-    my $digest = md5_hex($name);
-    $upload->copy_to($c->config->{upload_dir} . "/$digest") if $upload;
 
-    $c->model('DB::Upload')->create({
-        md5 => $digest,
-        fname => $name
-    });
+    my $upload = $c->req->upload('Filedata');
+    if ($upload) {
+        my $digest = md5_hex( uri_escape_utf8( $upload->basename ) );
 
-    my $uri = $c->uri_for('download', $digest);
-    $c->res->body($uri);
+        # save uploaded file
+        $upload->copy_to( catfile( $c->config->{upload_dir}, $digest ) );
+
+        # save meta data
+        $c->model('DB::Upload')->create(
+            {
+                md5   => $digest,
+                fname => $upload->basename,
+            }
+        );
+
+        # generate download url
+        $c->res->body( $c->uri_for('download', $digest) );
+    }
+    else {
+        Catalyst::Exception->throw(
+            message => "cannot find uploaded file from upload request"
+        );
+
+        # FIX: send what kind of content when it fails?
+        $c->res->body( 'what_the_...');
+    }
 }
 
 =head2 download
@@ -60,25 +79,61 @@ sub upload :Local {
 sub download :Local :Args(1) {
     my ( $self, $c, $digest ) = @_;
 
-    my $upload = $c->model('DB::Upload')->search({
-        md5 => $digest   
-    })->single;
+    # fetch upload object from db
+    my $upload
+        = $c->model('DB::Upload')->search({ md5 => $digest })->single;
 
-    my $fname = $upload->fname;
+    # increase download counter
     my $download = $upload->download;
     $upload->download($download++);
     $upload->update;
 
+    my $full_path  = catfile(
+        $c->config->{upload_dir},
+        $digest,
+    );
+    if (-f $full_path) {
+        #
+        # make proper header and send a file
+        #
+        my $stat          = stat $full_path;
+        my $encoded_fname = uri_escape_utf8($upload->fname);
+        $encoded_fname = $upload->fname;
 
-    my $upload_dir = $c->config->{upload_dir};
-    my $output_file = "$upload_dir/$digest";
-    my @st = stat($output_file) or die "No $output_file: $!";
-    $c->res->headers->content_type('application/octet-stream');
-    $c->res->headers->content_length($st[7]);
-    $c->res->headers->header("Content-Disposition" => 'attachment;filename="' . $fname . '";');
-    my $fh = IO::File->new( $output_file, 'r' );
-    $c->res->body($fh);
-    undef $fh;
+        # using Static::Simple plugin's _ext_to_type() private method
+        $c->log->debug( $c->_ext_to_type($upload->fname) );
+        $c->res->headers->content_length( $stat->size );
+        $c->res->headers->last_modified( $stat->mtime );
+
+        my $type = $c->_ext_to_type($upload->fname);
+        $c->res->headers->content_type( $type );
+        if ($type =~ m|^image/|) {
+            $c->res->headers->header(
+                "Content-Disposition" => qq{filename="$encoded_fname";},
+            );
+        }
+        else {
+            $c->res->headers->header(
+                "Content-Disposition" => qq{attachment;filename="$encoded_fname";},
+            );
+        }
+
+        my $fh = IO::File->new( $full_path, 'r' );
+        if ( defined $fh ) {
+            binmode $fh;
+            $c->res->body( $fh );
+        }
+        else {
+            Catalyst::Exception->throw(
+                message => "Unable to open $full_path for reading"
+            );
+        }
+    }
+    else {
+        Catalyst::Exception->throw(
+            message => "$full_path is not exists"
+        );
+    }
 }
 
 =head2 default
