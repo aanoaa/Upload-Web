@@ -82,6 +82,7 @@ function uploadStart(file) {
 		var progress = new FileProgress(file, this.customSettings.progressTarget);
 		progress.setStatus("Uploading...");
 		progress.toggleCancel(true, this);
+		this.addPostParam('onetime', $('#onetime').is(":checked") ? 1 : 0);
 	}
 	catch (ex) {}
 	

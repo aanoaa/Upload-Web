@@ -45,6 +45,12 @@ __PACKAGE__->table("upload");
   default_value: 0
   is_nullable: 0
 
+=head2 max_download
+
+  data_type: 'integer'
+  default_value: 0
+  is_nullable: 0
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -56,12 +62,14 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 0 },
   "download",
   { data_type => "integer", default_value => 0, is_nullable => 0 },
+  "max_download",
+  { data_type => "integer", default_value => 0, is_nullable => 0 },
 );
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-07-04 01:09:29
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:YVVte8PEo4S1xgfxKz1xLw
+# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-07-04 22:48:02
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:OoAUMaSX7lJH/7isPmfc7w
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
