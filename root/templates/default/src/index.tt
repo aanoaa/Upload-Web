@@ -3,6 +3,7 @@
     <div class="fieldset flash" id="fsUploadProgress">
         <span class="legend">Upload Queue</span>
     </div>
+    <input id="onetime" name="onetime" type="checkbox" value="onetime" />One-time download
     <div id="divStatus">0 Files Uploaded</div>
     <div>
         <span id="spanButtonPlaceHolder"></span>

@@ -54,8 +54,9 @@ sub upload :Local {
         # save meta data
         $c->model('DB::Upload')->create(
             {
-                md5   => $uuid,
-                fname => $upload->basename,
+                md5          => $uuid,
+                fname        => $upload->basename,
+                max_download => $c->req->params->{onetime},
             }
         );
 
@@ -89,9 +90,16 @@ sub download :Local :Args(1) {
     my $upload
         = $c->model('DB::Upload')->search({ md5 => $uuid })->single;
 
+    # check download count is exceeded
+    if (   $upload->max_download
+        && $upload->max_download <= $upload->download )
+    {
+        Catalyst::Exception->throw( message => "download count is exceeded" );
+        $c->detach('default');
+    }
+
     # increase download counter
-    my $download = $upload->download;
-    $upload->download($download++);
+    $upload->download($upload->download + 1);
     $upload->update;
 
     my $full_path  = catfile(
