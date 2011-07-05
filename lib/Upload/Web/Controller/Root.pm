@@ -94,8 +94,10 @@ sub download :Local :Args(1) {
     if (   $upload->max_download
         && $upload->max_download <= $upload->download )
     {
-        Catalyst::Exception->throw( message => "download count is exceeded" );
-        $c->detach('default');
+        #Catalyst::Exception->throw( message => "download count is exceeded" );
+        #$c->detach('default');
+        $c->res->body('얃옹 지웠습니다. 집에 가세여');
+        return;
     }
 
     # increase download counter
