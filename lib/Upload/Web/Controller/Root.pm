@@ -56,7 +56,7 @@ sub upload :Local {
             {
                 md5          => $uuid,
                 fname        => $upload->basename,
-                max_download => $c->req->params->{onetime},
+                max_download => $c->req->params->{onetime} || 9999,
             }
         );
 
