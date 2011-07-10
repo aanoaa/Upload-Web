@@ -33,6 +33,7 @@ body {
 h1.title {
     padding: 4px;
     margin: 0px;
+    color: [% site.rgb.orange %];
 }
 
 .message {

@@ -108,6 +108,9 @@ function uploadSuccess(file, serverData) {
 		progress.setStatus(serverData);
 		progress.toggleCancel(false);
 
+        var status = document.getElementById("complete");
+        status.innerHTML = '<a href="' + serverData + '">' + serverData + '</a>';
+
 	} catch (ex) {
 		this.debug(ex);
 	}

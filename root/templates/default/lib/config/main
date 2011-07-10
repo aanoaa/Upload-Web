@@ -12,7 +12,7 @@
 
    # define a data structure to hold sitewide data
    site = {
-     title     => 'your title here',
+     title     => '뭐든지 올려보아요',
      copyright => 'Copyright 2011 your project. All right reserved',
    };
 
